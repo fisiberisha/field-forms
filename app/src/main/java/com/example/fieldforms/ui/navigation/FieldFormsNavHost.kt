@@ -16,6 +16,7 @@ import com.example.fieldforms.ui.form.ImageDetailScreen
 fun FieldFormsNavHost(
     uiState: FormUiState,
     onRetry: () -> Unit,
+    onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
@@ -34,6 +35,7 @@ fun FieldFormsNavHost(
                         title = imageQuestion.title,
                     )
                 },
+                onChoiceResponseToggle = onChoiceResponseToggle,
             )
         }
         composable(

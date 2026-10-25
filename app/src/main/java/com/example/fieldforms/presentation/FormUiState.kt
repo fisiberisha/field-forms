@@ -6,6 +6,7 @@ data class FormUiState(
     val pages: List<FormPage> = emptyList(),
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
+    val choiceSelections: ChoiceSelections = emptyMap(),
 ) {
     val showFullScreenLoading: Boolean
         get() = isLoading && pages.isEmpty()

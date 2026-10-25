@@ -30,6 +30,7 @@ fun FormScreen(
     uiState: FormUiState,
     onRetry: () -> Unit,
     onImageClick: (ImageQuestion) -> Unit,
+    onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -60,6 +61,7 @@ fun FormScreen(
                     uiState = uiState,
                     onRetry = onRetry,
                     onImageClick = onImageClick,
+                    onChoiceResponseToggle = onChoiceResponseToggle,
                     contentPadding = innerPadding,
                 )
             }
@@ -72,6 +74,7 @@ private fun FormContent(
     uiState: FormUiState,
     onRetry: () -> Unit,
     onImageClick: (ImageQuestion) -> Unit,
+    onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
     contentPadding: PaddingValues,
 ) {
     LazyColumn(
@@ -96,7 +99,9 @@ private fun FormContent(
         ) { page ->
             FormPageContent(
                 page = page,
+                choiceSelections = uiState.choiceSelections,
                 onImageClick = onImageClick,
+                onChoiceResponseToggle = onChoiceResponseToggle,
             )
         }
     }

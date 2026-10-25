@@ -59,4 +59,21 @@ class FormViewModel @Inject constructor(
             }
         }
     }
+
+    fun onChoiceResponseToggle(
+        questionId: Int,
+        responseId: Int,
+        multipleSelection: Boolean,
+    ) {
+        _uiState.update { current ->
+            current.copy(
+                choiceSelections = ChoiceSelectionLogic.toggleSelection(
+                    current = current.choiceSelections,
+                    questionId = questionId,
+                    responseId = responseId,
+                    multipleSelection = multipleSelection,
+                ),
+            )
+        }
+    }
 }

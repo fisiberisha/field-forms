@@ -19,7 +19,9 @@ import com.example.fieldforms.domain.model.TextQuestion
 @Composable
 fun FormPageContent(
     page: FormPage,
+    choiceSelections: Map<Int, Set<Int>>,
     onImageClick: (ImageQuestion) -> Unit,
+    onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -32,7 +34,9 @@ fun FormPageContent(
             FormChildContent(
                 child = child,
                 sectionDepth = 0,
+                choiceSelections = choiceSelections,
                 onImageClick = onImageClick,
+                onChoiceResponseToggle = onChoiceResponseToggle,
             )
         }
     }
@@ -42,7 +46,9 @@ fun FormPageContent(
 private fun FormChildContent(
     child: FormChild,
     sectionDepth: Int,
+    choiceSelections: Map<Int, Set<Int>>,
     onImageClick: (ImageQuestion) -> Unit,
+    onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (child) {
@@ -61,7 +67,9 @@ private fun FormChildContent(
                     FormChildContent(
                         child = nested,
                         sectionDepth = sectionDepth + 1,
+                        choiceSelections = choiceSelections,
                         onImageClick = onImageClick,
+                        onChoiceResponseToggle = onChoiceResponseToggle,
                     )
                 }
             }
@@ -86,7 +94,19 @@ private fun FormChildContent(
             )
         }
         is ChoiceQuestion -> {
-            // Rendered in Phase 8.
+            ChoiceQuestionItem(
+                question = child,
+                selectedResponseIds = choiceSelections[child.id].orEmpty(),
+                onResponseToggle = { responseId ->
+                    onChoiceResponseToggle(
+                        child.id,
+                        responseId,
+                        child.responseSet.multipleSelection,
+                    )
+                },
+                sectionDepth = sectionDepth,
+                modifier = modifier,
+            )
         }
     }
 }
