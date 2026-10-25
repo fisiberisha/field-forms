@@ -2,8 +2,6 @@ package com.example.fieldforms.data.repository
 
 import com.example.fieldforms.data.local.FormDao
 import com.example.fieldforms.data.local.entity.FormNodeEntity
-import com.example.fieldforms.data.local.entity.ResponseOptionEntity
-import com.example.fieldforms.data.local.entity.ResponseSetEntity
 import com.example.fieldforms.data.mapper.toPersistModels
 import com.example.fieldforms.data.remote.FormApiService
 import com.example.fieldforms.data.remote.FormJsonParser
@@ -65,7 +63,7 @@ class FormRepositoryImplTest {
     }
 
     @Test
-    fun refresh_success_replacesCacheTransactionally() = runTest {
+    fun refresh_success_invokesDaoReplaceAll() = runTest {
         val remotePages = FormJsonParser.parsePages(readFixture("lumiform-android-test.json"))
         val persistModels = remotePages.toPersistModels()
 
@@ -97,7 +95,7 @@ class FormRepositoryImplTest {
         val result = repository.refresh()
 
         assertTrue(result is RefreshResult.Failure)
-        assertEquals(RefreshError.Network, (result as RefreshResult.Failure).error)
+        assertEquals(RefreshError.Unknown("offline"), (result as RefreshResult.Failure).error)
         coVerify(exactly = 0) {
             formDao.replaceAll(
                 nodes = any(),

@@ -1,6 +1,6 @@
 package com.example.fieldforms.presentation
 
-typealias ChoiceSelections = Map<Int, Set<Int>>
+import com.example.fieldforms.domain.model.ChoiceSelections
 
 object ChoiceSelectionLogic {
 

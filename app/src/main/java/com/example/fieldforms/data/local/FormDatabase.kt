@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.fieldforms.data.local.entity.ChoiceSelectionEntity
 import com.example.fieldforms.data.local.entity.FormNodeEntity
 import com.example.fieldforms.data.local.entity.ResponseOptionEntity
 import com.example.fieldforms.data.local.entity.ResponseSetEntity
@@ -13,8 +14,9 @@ import com.example.fieldforms.data.local.entity.ResponseSetEntity
         FormNodeEntity::class,
         ResponseSetEntity::class,
         ResponseOptionEntity::class,
+        ChoiceSelectionEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class FormDatabase : RoomDatabase() {

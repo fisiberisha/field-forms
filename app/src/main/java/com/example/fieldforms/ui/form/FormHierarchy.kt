@@ -23,13 +23,16 @@ fun FormPageContent(
     onImageClick: (ImageQuestion) -> Unit,
     onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    showPageTitle: Boolean = true,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        Text(
-            text = page.title,
-            style = FormTypography.pageTitle(),
-        )
-        Spacer(modifier = Modifier.height(12.dp))
+        if (showPageTitle) {
+            Text(
+                text = page.title,
+                style = FormTypography.pageTitle(),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+        }
         page.items.forEach { child ->
             FormChildContent(
                 child = child,

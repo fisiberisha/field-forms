@@ -26,6 +26,7 @@ class MainActivity : ComponentActivity() {
                 FieldFormsNavHost(
                     uiState = uiState,
                     onRetry = viewModel::refresh,
+                    onPageSelected = viewModel::onPageSelected,
                     onChoiceResponseToggle = viewModel::onChoiceResponseToggle,
                 )
             }

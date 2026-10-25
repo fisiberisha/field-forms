@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -17,6 +16,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.PrimaryTabRow
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -27,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.fieldforms.R
+import com.example.fieldforms.domain.model.FormPage
 import com.example.fieldforms.domain.model.ImageQuestion
 import com.example.fieldforms.presentation.FormUiState
 
@@ -35,6 +37,7 @@ import com.example.fieldforms.presentation.FormUiState
 fun FormScreen(
     uiState: FormUiState,
     onRetry: () -> Unit,
+    onPageSelected: (Int) -> Unit,
     onImageClick: (ImageQuestion) -> Unit,
     onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
     modifier: Modifier = Modifier,
@@ -79,6 +82,7 @@ fun FormScreen(
                     FormContent(
                         uiState = uiState,
                         onRetry = onRetry,
+                        onPageSelected = onPageSelected,
                         onImageClick = onImageClick,
                         onChoiceResponseToggle = onChoiceResponseToggle,
                     )
@@ -109,35 +113,64 @@ private fun PullToRefreshFormContainer(
 private fun FormContent(
     uiState: FormUiState,
     onRetry: () -> Unit,
+    onPageSelected: (Int) -> Unit,
     onImageClick: (ImageQuestion) -> Unit,
     onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp),
-    ) {
-        uiState.errorMessageRes?.let { messageRes ->
-            item(key = "refresh_error_banner") {
-                RefreshErrorBanner(
-                    messageRes = messageRes,
-                    onRetry = onRetry,
-                )
+    val selectedPage = uiState.selectedPage ?: return
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (uiState.errorMessageRes != null) {
+            RefreshErrorBanner(
+                messageRes = uiState.errorMessageRes,
+                onRetry = onRetry,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+
+        if (uiState.pages.size > 1) {
+            PrimaryTabRow(selectedTabIndex = uiState.selectedPageIndex) {
+                uiState.pages.forEachIndexed { index, page ->
+                    PageTab(
+                        page = page,
+                        selected = uiState.selectedPageIndex == index,
+                        onClick = { onPageSelected(index) },
+                    )
+                }
             }
         }
 
-        items(
-            items = uiState.pages,
-            key = { page -> page.id },
-        ) { page ->
-            FormPageContent(
-                page = page,
-                choiceSelections = uiState.choiceSelections,
-                onImageClick = onImageClick,
-                onChoiceResponseToggle = onChoiceResponseToggle,
-            )
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item(key = "page_${selectedPage.id}") {
+                FormPageContent(
+                    page = selectedPage,
+                    showPageTitle = uiState.pages.size <= 1,
+                    choiceSelections = uiState.choiceSelections,
+                    onImageClick = onImageClick,
+                    onChoiceResponseToggle = onChoiceResponseToggle,
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun PageTab(
+    page: FormPage,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Tab(
+        selected = selected,
+        onClick = onClick,
+        text = { Text(text = page.title) },
+    )
 }
 
 @Composable

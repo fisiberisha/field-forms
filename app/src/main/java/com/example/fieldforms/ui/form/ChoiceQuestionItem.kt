@@ -102,12 +102,17 @@ private fun MultiChoiceOptionRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .selectable(
+                selected = isSelected,
+                onClick = onToggle,
+                role = Role.Checkbox,
+            )
             .padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Checkbox(
             checked = isSelected,
-            onCheckedChange = { onToggle() },
+            onCheckedChange = null,
         )
         Text(
             text = label,

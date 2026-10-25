@@ -1,21 +1,36 @@
 package com.example.fieldforms.data.repository
 
 import com.example.fieldforms.domain.repository.RefreshError
+import com.squareup.moshi.JsonEncodingException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import okhttp3.ResponseBody.Companion.toResponseBody
 
 class RefreshErrorMapperTest {
 
     @Test
-    fun mapsNetworkExceptionsToNetworkError() {
-        assertEquals(RefreshError.Network, IOException().toRefreshError())
+    fun mapsConnectivityExceptionsToNetworkError() {
         assertEquals(RefreshError.Network, UnknownHostException().toRefreshError())
+        assertEquals(RefreshError.Network, ConnectException().toRefreshError())
+        assertEquals(RefreshError.Network, SocketTimeoutException().toRefreshError())
+    }
+
+    @Test
+    fun mapsMoshiFailuresToUnknownNotNetwork() {
+        val jsonError = JsonEncodingException("Expected BEGIN_OBJECT but was STRING at path \$")
+        assertEquals(RefreshError.Unknown(jsonError.message), jsonError.toRefreshError())
+    }
+
+    @Test
+    fun mapsGenericIOExceptionToUnknown() {
+        assertEquals(RefreshError.Unknown("broken pipe"), IOException("broken pipe").toRefreshError())
     }
 
     @Test

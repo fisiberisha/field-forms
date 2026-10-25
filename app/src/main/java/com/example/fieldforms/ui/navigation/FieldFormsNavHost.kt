@@ -16,6 +16,7 @@ import com.example.fieldforms.ui.form.ImageDetailScreen
 fun FieldFormsNavHost(
     uiState: FormUiState,
     onRetry: () -> Unit,
+    onPageSelected: (Int) -> Unit,
     onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
@@ -29,6 +30,7 @@ fun FieldFormsNavHost(
             FormScreen(
                 uiState = uiState,
                 onRetry = onRetry,
+                onPageSelected = onPageSelected,
                 onImageClick = { imageQuestion ->
                     navController.navigateToImageDetail(
                         imageSrc = imageQuestion.src,

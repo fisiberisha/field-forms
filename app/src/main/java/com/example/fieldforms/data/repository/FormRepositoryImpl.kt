@@ -1,14 +1,20 @@
 package com.example.fieldforms.data.repository
 
 import com.example.fieldforms.data.local.FormDao
+import com.example.fieldforms.data.mapper.toChoiceSelectionEntities
+import com.example.fieldforms.data.mapper.toChoiceSelections
 import com.example.fieldforms.data.mapper.toDomainPages
 import com.example.fieldforms.data.mapper.toPersistModels
 import com.example.fieldforms.data.remote.FormApiService
+import com.example.fieldforms.domain.model.ChoiceSelections
 import com.example.fieldforms.domain.model.FormPage
 import com.example.fieldforms.domain.repository.FormRepository
 import com.example.fieldforms.domain.repository.RefreshResult
+import com.example.fieldforms.presentation.ChoiceSelectionLogic
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class FormRepositoryImpl @Inject constructor(
@@ -25,6 +31,9 @@ class FormRepositoryImpl @Inject constructor(
             nodes.toDomainPages(responseSets, responseOptions)
         }
 
+    override fun observeChoiceSelections(): Flow<ChoiceSelections> =
+        formDao.observeChoiceSelections().map { rows -> rows.toChoiceSelections() }
+
     override suspend fun refresh(): RefreshResult =
         try {
             val pages = formApiService.getPages()
@@ -35,7 +44,24 @@ class FormRepositoryImpl @Inject constructor(
                 responseOptions = persistModels.responseOptions,
             )
             RefreshResult.Success
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (exception: Exception) {
             RefreshResult.Failure(exception.toRefreshError())
         }
+
+    override suspend fun updateChoiceSelection(
+        questionId: Int,
+        responseId: Int,
+        multipleSelection: Boolean,
+    ) {
+        val current = formDao.getChoiceSelections().toChoiceSelections()
+        val updated = ChoiceSelectionLogic.toggleSelection(
+            current = current,
+            questionId = questionId,
+            responseId = responseId,
+            multipleSelection = multipleSelection,
+        )
+        formDao.replaceAllChoiceSelections(updated.toChoiceSelectionEntities())
+    }
 }

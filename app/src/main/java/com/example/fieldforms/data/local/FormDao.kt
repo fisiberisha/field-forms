@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import com.example.fieldforms.data.local.entity.ChoiceSelectionEntity
 import com.example.fieldforms.data.local.entity.FormNodeEntity
 import com.example.fieldforms.data.local.entity.ResponseOptionEntity
 import com.example.fieldforms.data.local.entity.ResponseSetEntity
@@ -22,6 +23,12 @@ interface FormDao {
     @Query("SELECT * FROM response_options ORDER BY sortOrder")
     fun observeResponseOptions(): Flow<List<ResponseOptionEntity>>
 
+    @Query("SELECT * FROM choice_selections")
+    fun observeChoiceSelections(): Flow<List<ChoiceSelectionEntity>>
+
+    @Query("SELECT * FROM choice_selections")
+    suspend fun getChoiceSelections(): List<ChoiceSelectionEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertNodes(nodes: List<FormNodeEntity>)
 
@@ -30,6 +37,12 @@ interface FormDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertResponseOptions(responseOptions: List<ResponseOptionEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChoiceSelections(selections: List<ChoiceSelectionEntity>)
+
+    @Query("DELETE FROM choice_selections")
+    suspend fun deleteAllChoiceSelections()
 
     @Query("DELETE FROM form_nodes")
     suspend fun deleteAllNodes()
@@ -52,5 +65,13 @@ interface FormDao {
         insertResponseSets(responseSets)
         insertResponseOptions(responseOptions)
         insertNodes(nodes)
+    }
+
+    @Transaction
+    suspend fun replaceAllChoiceSelections(selections: List<ChoiceSelectionEntity>) {
+        deleteAllChoiceSelections()
+        if (selections.isNotEmpty()) {
+            insertChoiceSelections(selections)
+        }
     }
 }

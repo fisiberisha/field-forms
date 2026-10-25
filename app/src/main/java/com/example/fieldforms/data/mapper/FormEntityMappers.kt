@@ -23,7 +23,7 @@ fun List<FormNodeEntity>.toDomainPages(
         .groupBy { it.responseSetId }
         .mapValues { (_, options) -> options.sortedBy { it.sortOrder } }
 
-    fun mapChild(entity: FormNodeEntity): FormChild =
+    fun mapChild(entity: FormNodeEntity): FormChild? =
         when (entity.type) {
             FormNodeType.SECTION -> FormSection(
                 id = entity.id,
@@ -40,26 +40,22 @@ fun List<FormNodeEntity>.toDomainPages(
                 title = entity.title.orEmpty(),
             )
             FormNodeType.CHOICE -> {
-                val setId = requireNotNull(entity.responseSetId) {
-                    "Choice node ${entity.id} is missing responseSetId"
-                }
-                val setEntity = requireNotNull(responseSetById[setId]) {
-                    "Missing response set $setId for choice node ${entity.id}"
-                }
+                val setId = entity.responseSetId ?: return null
+                val setEntity = responseSetById[setId] ?: return null
                 ChoiceQuestion(
                     id = entity.id,
                     content = entity.content.orEmpty(),
                     responseSet = setEntity.toDomainResponseSet(optionsBySetId[setId].orEmpty()),
                 )
             }
-            else -> error("Unexpected child node type: ${entity.type}")
+            else -> null
         }
 
     return nodesByParent[null]
         .orEmpty()
         .sortedBy { it.sortOrder }
         .filter { it.type == FormNodeType.PAGE }
-        .map { pageEntity ->
+        .mapNotNull { pageEntity ->
             FormPage(
                 id = pageEntity.id,
                 title = pageEntity.title.orEmpty(),
@@ -68,15 +64,15 @@ fun List<FormNodeEntity>.toDomainPages(
         }
 }
 
-private fun <T> childrenOf(
+private fun <T : FormChild> childrenOf(
     parentId: Int,
     nodesByParent: Map<Int?, List<FormNodeEntity>>,
-    mapChild: (FormNodeEntity) -> T,
+    mapChild: (FormNodeEntity) -> T?,
 ): List<T> =
     nodesByParent[parentId]
         .orEmpty()
         .sortedBy { it.sortOrder }
-        .map(mapChild)
+        .mapNotNull(mapChild)
 
 private fun ResponseSetEntity.toDomainResponseSet(
     options: List<ResponseOptionEntity>,
