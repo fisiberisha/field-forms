@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">FieldForms</string>
+
+    <string name="app_bar_title">Field Forms</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_load_form">Load form</string>
+    <string name="empty_no_form_data">No form data available.</string>
+    <string name="content_desc_back">Back</string>
+
+    <string name="error_load_network">Couldn\'t load the form. Check your connection and try again.</string>
+    <string name="error_load_generic">Couldn\'t load the form. Please try again.</string>
+    <string name="error_refresh_offline_cache">Couldn\'t refresh — you\'re offline. Showing saved data.</string>
+    <string name="error_refresh_with_cache">Couldn\'t refresh. Showing saved data.</string>
 </resources>

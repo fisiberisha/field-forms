@@ -24,10 +24,7 @@ class FormViewModel @Inject constructor(
         viewModelScope.launch {
             formRepository.observeForm().collect { pages ->
                 _uiState.update { current ->
-                    current.copy(
-                        pages = pages,
-                        isLoading = if (pages.isEmpty()) current.isLoading else false,
-                    )
+                    current.copy(pages = pages)
                 }
             }
         }
@@ -36,28 +33,22 @@ class FormViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.update { current ->
-                if (current.pages.isEmpty()) {
-                    current.copy(isLoading = true, errorMessage = null)
-                } else {
-                    current.copy(errorMessage = null)
-                }
-            }
+            _uiState.update { it.copy(isRefreshing = true, errorMessageRes = null) }
 
             when (val result = formRepository.refresh()) {
                 RefreshResult.Success -> {
-                    _uiState.update { it.copy(isLoading = false, errorMessage = null) }
+                    _uiState.update { it.copy(isRefreshing = false, errorMessageRes = null) }
                 }
                 is RefreshResult.Failure -> {
                     _uiState.update { current ->
-                        val message = if (current.pages.isEmpty()) {
-                            FormErrorMessages.noCachedDataMessage(result.cause)
+                        val messageRes = if (current.pages.isEmpty()) {
+                            FormErrorMessages.noCachedDataMessageRes(result.error)
                         } else {
-                            FormErrorMessages.cachedDataRefreshMessage(result.cause)
+                            FormErrorMessages.cachedDataRefreshMessageRes(result.error)
                         }
                         current.copy(
-                            isLoading = false,
-                            errorMessage = message,
+                            isRefreshing = false,
+                            errorMessageRes = messageRes,
                         )
                     }
                 }

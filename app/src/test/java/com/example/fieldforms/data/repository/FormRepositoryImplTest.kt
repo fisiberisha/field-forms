@@ -9,6 +9,7 @@ import com.example.fieldforms.data.remote.FormApiService
 import com.example.fieldforms.data.remote.FormJsonParser
 import com.example.fieldforms.domain.model.FormNodeType
 import com.example.fieldforms.domain.model.FormSection
+import com.example.fieldforms.domain.repository.RefreshError
 import com.example.fieldforms.domain.repository.RefreshResult
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -96,6 +97,7 @@ class FormRepositoryImplTest {
         val result = repository.refresh()
 
         assertTrue(result is RefreshResult.Failure)
+        assertEquals(RefreshError.Network, (result as RefreshResult.Failure).error)
         coVerify(exactly = 0) {
             formDao.replaceAll(
                 nodes = any(),

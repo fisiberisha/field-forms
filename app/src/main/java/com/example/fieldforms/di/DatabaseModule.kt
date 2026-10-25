@@ -10,8 +10,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/** Hilt module — consumed by the annotation processor, not from application Kotlin code. */
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("unused")
 object DatabaseModule {
 
     @Provides

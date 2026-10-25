@@ -1,21 +1,22 @@
 package com.example.fieldforms.presentation
 
+import androidx.annotation.StringRes
 import com.example.fieldforms.domain.model.FormPage
 
 data class FormUiState(
     val pages: List<FormPage> = emptyList(),
-    val isLoading: Boolean = true,
-    val errorMessage: String? = null,
+    val isRefreshing: Boolean = true,
+    @param:StringRes val errorMessageRes: Int? = null,
     val choiceSelections: ChoiceSelections = emptyMap(),
 ) {
     val showFullScreenLoading: Boolean
-        get() = isLoading && pages.isEmpty()
+        get() = isRefreshing && pages.isEmpty()
 
     val showFullScreenError: Boolean
-        get() = !isLoading && pages.isEmpty() && errorMessage != null
+        get() = !isRefreshing && pages.isEmpty() && errorMessageRes != null
 
     val showEmpty: Boolean
-        get() = !isLoading && pages.isEmpty() && errorMessage == null
+        get() = !isRefreshing && pages.isEmpty() && errorMessageRes == null
 
     val showContent: Boolean
         get() = pages.isNotEmpty()

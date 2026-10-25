@@ -35,7 +35,7 @@ class FormRepositoryImpl @Inject constructor(
                 responseOptions = persistModels.responseOptions,
             )
             RefreshResult.Success
-        } catch (cause: Throwable) {
-            RefreshResult.Failure(cause)
+        } catch (exception: Exception) {
+            RefreshResult.Failure(exception.toRefreshError())
         }
 }

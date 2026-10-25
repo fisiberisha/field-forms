@@ -1,5 +1,6 @@
 package com.example.fieldforms.ui.form
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,11 +19,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.fieldforms.R
 import com.example.fieldforms.domain.model.ImageQuestion
 import com.example.fieldforms.presentation.FormUiState
 
@@ -38,7 +42,7 @@ fun FormScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(title = { Text(text = "Field Forms") })
+            TopAppBar(title = { Text(text = stringResource(R.string.app_bar_title)) })
         },
     ) { innerPadding ->
         when {
@@ -46,28 +50,58 @@ fun FormScreen(
                 LoadingContent(modifier = Modifier.padding(innerPadding))
             }
             uiState.showFullScreenError -> {
-                ErrorContent(
-                    message = uiState.errorMessage.orEmpty(),
-                    onRetry = onRetry,
+                PullToRefreshFormContainer(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = onRetry,
                     modifier = Modifier.padding(innerPadding),
-                )
+                ) {
+                    ErrorContent(
+                        messageRes = checkNotNull(uiState.errorMessageRes),
+                        onRetry = onRetry,
+                    )
+                }
             }
             uiState.showEmpty -> {
-                EmptyContent(
-                    onRetry = onRetry,
+                PullToRefreshFormContainer(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = onRetry,
                     modifier = Modifier.padding(innerPadding),
-                )
+                ) {
+                    EmptyContent(onRetry = onRetry)
+                }
             }
             uiState.showContent -> {
-                FormContent(
-                    uiState = uiState,
-                    onRetry = onRetry,
-                    onImageClick = onImageClick,
-                    onChoiceResponseToggle = onChoiceResponseToggle,
-                    contentPadding = innerPadding,
-                )
+                PullToRefreshFormContainer(
+                    isRefreshing = uiState.isRefreshing,
+                    onRefresh = onRetry,
+                    modifier = Modifier.padding(innerPadding),
+                ) {
+                    FormContent(
+                        uiState = uiState,
+                        onRetry = onRetry,
+                        onImageClick = onImageClick,
+                        onChoiceResponseToggle = onChoiceResponseToggle,
+                    )
+                }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PullToRefreshFormContainer(
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = onRefresh,
+        modifier = modifier.fillMaxSize(),
+    ) {
+        content()
     }
 }
 
@@ -77,19 +111,16 @@ private fun FormContent(
     onRetry: () -> Unit,
     onImageClick: (ImageQuestion) -> Unit,
     onChoiceResponseToggle: (questionId: Int, responseId: Int, multipleSelection: Boolean) -> Unit,
-    contentPadding: PaddingValues,
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
-        if (uiState.errorMessage != null) {
+        uiState.errorMessageRes?.let { messageRes ->
             item(key = "refresh_error_banner") {
                 RefreshErrorBanner(
-                    message = uiState.errorMessage,
+                    messageRes = messageRes,
                     onRetry = onRetry,
                 )
             }
@@ -111,7 +142,7 @@ private fun FormContent(
 
 @Composable
 private fun RefreshErrorBanner(
-    message: String,
+    @StringRes messageRes: Int,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -126,12 +157,12 @@ private fun RefreshErrorBanner(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
-                text = message,
+                text = stringResource(messageRes),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer,
             )
             Button(onClick = onRetry) {
-                Text(text = "Retry")
+                Text(text = stringResource(R.string.action_retry))
             }
         }
     }
@@ -160,7 +191,7 @@ private fun EmptyContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "No form data available.",
+            text = stringResource(R.string.empty_no_form_data),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
         )
@@ -168,14 +199,14 @@ private fun EmptyContent(
             onClick = onRetry,
             modifier = Modifier.padding(top = 16.dp),
         ) {
-            Text(text = "Load form")
+            Text(text = stringResource(R.string.action_load_form))
         }
     }
 }
 
 @Composable
 private fun ErrorContent(
-    message: String,
+    @StringRes messageRes: Int,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -187,7 +218,7 @@ private fun ErrorContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = message,
+            text = stringResource(messageRes),
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center,
@@ -196,7 +227,7 @@ private fun ErrorContent(
             onClick = onRetry,
             modifier = Modifier.padding(top = 16.dp),
         ) {
-            Text(text = "Retry")
+            Text(text = stringResource(R.string.action_retry))
         }
     }
 }

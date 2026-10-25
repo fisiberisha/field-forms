@@ -8,8 +8,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/** Hilt module — consumed by the annotation processor, not from application Kotlin code. */
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("unused")
 abstract class RepositoryModule {
 
     @Binds

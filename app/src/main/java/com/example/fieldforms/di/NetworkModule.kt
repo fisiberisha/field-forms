@@ -13,8 +13,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
 
+/** Hilt module — consumed by the annotation processor, not from application Kotlin code. */
 @Module
 @InstallIn(SingletonComponent::class)
+@Suppress("unused")
 object NetworkModule {
 
     @Provides

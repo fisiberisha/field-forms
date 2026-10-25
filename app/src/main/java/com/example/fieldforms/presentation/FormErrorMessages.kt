@@ -1,23 +1,24 @@
 package com.example.fieldforms.presentation
 
-import java.io.IOException
-import java.net.UnknownHostException
+import androidx.annotation.StringRes
+import com.example.fieldforms.R
+import com.example.fieldforms.domain.repository.RefreshError
 
 object FormErrorMessages {
 
-    fun noCachedDataMessage(cause: Throwable): String =
-        when (cause) {
-            is UnknownHostException, is IOException ->
-                "Couldn't load the form. Check your connection and try again."
-            else ->
-                cause.message ?: "Couldn't load the form. Please try again."
+    @StringRes
+    fun noCachedDataMessageRes(error: RefreshError): Int =
+        when (error) {
+            RefreshError.Network -> R.string.error_load_network
+            is RefreshError.Http -> R.string.error_load_generic
+            is RefreshError.Unknown -> R.string.error_load_generic
         }
 
-    fun cachedDataRefreshMessage(cause: Throwable): String =
-        when (cause) {
-            is UnknownHostException, is IOException ->
-                "Couldn't refresh — you're offline. Showing saved data."
-            else ->
-                "Couldn't refresh. Showing saved data."
+    @StringRes
+    fun cachedDataRefreshMessageRes(error: RefreshError): Int =
+        when (error) {
+            RefreshError.Network -> R.string.error_refresh_offline_cache
+            is RefreshError.Http -> R.string.error_refresh_with_cache
+            is RefreshError.Unknown -> R.string.error_refresh_with_cache
         }
 }

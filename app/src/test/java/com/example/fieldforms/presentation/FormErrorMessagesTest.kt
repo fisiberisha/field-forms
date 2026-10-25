@@ -1,29 +1,33 @@
 package com.example.fieldforms.presentation
 
+import com.example.fieldforms.R
+import com.example.fieldforms.domain.repository.RefreshError
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import java.io.IOException
-import java.net.UnknownHostException
 
 class FormErrorMessagesTest {
 
     @Test
-    fun noCachedDataMessage_networkErrors_areUserFriendly() {
+    fun noCachedDataMessageRes_mapsNetworkToLoadNetworkString() {
         assertEquals(
-            "Couldn't load the form. Check your connection and try again.",
-            FormErrorMessages.noCachedDataMessage(IOException()),
+            R.string.error_load_network,
+            FormErrorMessages.noCachedDataMessageRes(RefreshError.Network),
         )
         assertEquals(
-            "Couldn't load the form. Check your connection and try again.",
-            FormErrorMessages.noCachedDataMessage(UnknownHostException()),
+            R.string.error_load_generic,
+            FormErrorMessages.noCachedDataMessageRes(RefreshError.Http(500)),
         )
     }
 
     @Test
-    fun cachedDataRefreshMessage_networkErrors_mentionsSavedData() {
+    fun cachedDataRefreshMessageRes_mapsNetworkToOfflineCacheString() {
         assertEquals(
-            "Couldn't refresh — you're offline. Showing saved data.",
-            FormErrorMessages.cachedDataRefreshMessage(IOException()),
+            R.string.error_refresh_offline_cache,
+            FormErrorMessages.cachedDataRefreshMessageRes(RefreshError.Network),
+        )
+        assertEquals(
+            R.string.error_refresh_with_cache,
+            FormErrorMessages.cachedDataRefreshMessageRes(RefreshError.Unknown("x")),
         )
     }
 }
