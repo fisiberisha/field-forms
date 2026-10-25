@@ -9,8 +9,9 @@ import com.example.fieldforms.domain.repository.FormRepository
 import com.example.fieldforms.domain.repository.RefreshResult
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import javax.inject.Inject
 
-class FormRepositoryImpl(
+class FormRepositoryImpl @Inject constructor(
     private val formDao: FormDao,
     private val formApiService: FormApiService,
 ) : FormRepository {
