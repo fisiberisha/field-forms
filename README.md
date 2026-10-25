@@ -106,7 +106,9 @@ Uses in-memory Room to verify that a **successful refresh replaces** cached form
 - [ ] Image thumbnail opens full-screen detail with title; back returns to the form
 - [ ] Single-choice and multi-choice work; **tap option label** on multi-choice; **scores** visible on Second Page single-choice options when present
 - [ ] Second Page shows **“X of Y answered”** as choices are filled; **“Last updated …”** after a successful refresh
-- [ ] Select Second Page, kill app, relaunch — **same tab** and **saved choice answers**
+- [ ] **Choice answers** survive any relaunch (Room) — fill choices on Second Page, fully close and reopen the app; selections remain
+- [ ] **Tab + last updated** survive **process death** while the task stays in Recents (SavedStateHandle): select Second Page, stop the process (**Run → Stop** in Android Studio, or system kill), reopen from Recents — same tab and timestamp
+- [ ] **Not expected:** swipe the app away from Recents, then open from the launcher — tab resets to Main Page and “Last updated” clears; answers still restore from Room
 - [ ] After a successful load, airplane mode + relaunch — cached form still visible
 - [ ] Failed refresh with cache — error card **above** the list (visible on Second Page without scrolling up) and **Retry**
 - [ ] Clear app storage, offline launch — full-screen error and **Retry**
@@ -114,13 +116,25 @@ Uses in-memory Room to verify that a **successful refresh replaces** cached form
 
 ## Screenshots (for GitHub)
 
-Suggested captures:
+Add PNGs under `docs/screenshots/` (create the folder), then embed them here for reviewers. Minimum set:
 
-1. **Main Page** tab with nested sections
-2. **Second Page** tab with choice questions, scores, and progress line
-3. Image detail screen
-4. Offline / refresh error banner with cached content (Second Page tab)
-5. Pull-to-refresh indicator (optional)
+| # | File (suggested) | What to capture |
+|---|------------------|-----------------|
+| 1 | `01-main-page-tabs.png` | **Main Page** tab, nested sections |
+| 2 | `02-second-page-choices.png` | **Second Page** tab, choices, scores, “X of Y answered” |
+| 3 | `03-image-detail.png` | Full-screen image detail |
+| 4 | `04-offline-banner.png` | Refresh error card **above** list on Second Page with cached content |
+
+Example embed after files exist:
+
+```markdown
+![Main Page](docs/screenshots/01-main-page-tabs.png)
+![Second Page choices](docs/screenshots/02-second-page-choices.png)
+![Image detail](docs/screenshots/03-image-detail.png)
+![Offline banner](docs/screenshots/04-offline-banner.png)
+```
+
+Check off manual items above once verified; run `./gradlew connectedDebugAndroidTest` on a device/emulator before submit.
 
 ## Package
 
