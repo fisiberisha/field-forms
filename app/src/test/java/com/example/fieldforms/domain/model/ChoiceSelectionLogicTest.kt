@@ -1,4 +1,4 @@
-package com.example.fieldforms.presentation
+package com.example.fieldforms.domain.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

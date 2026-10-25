@@ -6,21 +6,25 @@ import com.example.fieldforms.data.mapper.toChoiceSelections
 import com.example.fieldforms.data.mapper.toDomainPages
 import com.example.fieldforms.data.mapper.toPersistModels
 import com.example.fieldforms.data.remote.FormApiService
+import com.example.fieldforms.domain.model.ChoiceSelectionLogic
 import com.example.fieldforms.domain.model.ChoiceSelections
 import com.example.fieldforms.domain.model.FormPage
 import com.example.fieldforms.domain.repository.FormRepository
 import com.example.fieldforms.domain.repository.RefreshResult
-import com.example.fieldforms.presentation.ChoiceSelectionLogic
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 
 class FormRepositoryImpl @Inject constructor(
     private val formDao: FormDao,
     private val formApiService: FormApiService,
 ) : FormRepository {
+
+    private val choiceSelectionMutex = Mutex()
 
     override fun observeForm(): Flow<List<FormPage>> =
         combine(
@@ -55,13 +59,15 @@ class FormRepositoryImpl @Inject constructor(
         responseId: Int,
         multipleSelection: Boolean,
     ) {
-        val current = formDao.getChoiceSelections().toChoiceSelections()
-        val updated = ChoiceSelectionLogic.toggleSelection(
-            current = current,
-            questionId = questionId,
-            responseId = responseId,
-            multipleSelection = multipleSelection,
-        )
-        formDao.replaceAllChoiceSelections(updated.toChoiceSelectionEntities())
+        choiceSelectionMutex.withLock {
+            val current = formDao.getChoiceSelections().toChoiceSelections()
+            val updated = ChoiceSelectionLogic.toggleSelection(
+                current = current,
+                questionId = questionId,
+                responseId = responseId,
+                multipleSelection = multipleSelection,
+            )
+            formDao.replaceAllChoiceSelections(updated.toChoiceSelectionEntities())
+        }
     }
 }

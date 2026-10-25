@@ -95,7 +95,7 @@ class FormRepositoryImplTest {
         val result = repository.refresh()
 
         assertTrue(result is RefreshResult.Failure)
-        assertEquals(RefreshError.Unknown("offline"), (result as RefreshResult.Failure).error)
+        assertEquals(RefreshError.Network, (result as RefreshResult.Failure).error)
         coVerify(exactly = 0) {
             formDao.replaceAll(
                 nodes = any(),

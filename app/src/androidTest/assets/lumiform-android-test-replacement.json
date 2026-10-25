@@ -1,0 +1,14 @@
+[
+  {
+    "id": 100,
+    "type": "page",
+    "title": "Replacement Page",
+    "items": [
+      {
+        "id": 101,
+        "type": "text",
+        "content": "Only payload after refresh."
+      }
+    ]
+  }
+]

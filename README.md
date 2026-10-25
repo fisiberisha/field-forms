@@ -1,13 +1,16 @@
 # Field Forms
 
-Native Android app for the **Lumiform Android Code Challenge**: fetch a hierarchical inspection form from JSON, display it in Compose, cache it offline in Room, and handle refresh failures gracefully.
+Native Android app for the **Lumiform Android Code Challenge**: fetch a hierarchical inspection form from JSON, display it in Compose, cache it offline in Room, persist inspection answers, and handle refresh failures gracefully.
 
 ## Features
 
-- **Structured form UI** — pages, nested sections, text questions, image thumbnails (full-screen detail), single- and multi-select choices
-- **Offline-first** — Room is the source of truth; successful network refresh replaces the cache in a transaction
-- **Network fallback** — failed refresh keeps cached data visible with an inline error card and retry
-- **Tests** — JSON parsing, mappers, repository, ViewModel, and choice selection logic
+- **Structured form UI** — **tabbed pages** (one page at a time), nested sections, text questions, image thumbnails (full-screen detail), single- and multi-select choices with **scores shown** when the API provides them
+- **Progress** — per-page **“X of Y answered”** for choice questions; **“Last updated …”** after a successful refresh
+- **Offline-first** — Room is the source of truth; successful network refresh **replaces** the form cache in a transaction
+- **Persisted answers** — choice selections in Room survive process death and form refresh; **selected tab** restored via `SavedStateHandle`
+- **Network fallback** — failed refresh keeps cached data; error card stays **fixed above** the list (not inside the scroll)
+- **Pull-to-refresh** on the form screen
+- **Tests** — unit tests (parsing, mappers, repository mocks, ViewModel) plus **instrumented** Room integration tests
 
 ## Tech stack
 
@@ -17,18 +20,18 @@ Native Android app for the **Lumiform Android Code Challenge**: fetch a hierarch
 | Architecture | MVVM (`ui` → `presentation` → `domain` / `data`) |
 | Networking | Retrofit, OkHttp, Moshi (polymorphic `"type"` JSON) |
 | Async | Coroutines, `Flow`, `StateFlow` |
-| Database | Room (normalized schema) |
+| Database | Room (normalized schema, DB v2) |
 | Images | Coil |
 | DI | Hilt |
 | Navigation | Navigation Compose |
-| Testing | JUnit, kotlinx-coroutines-test, MockK |
+| Testing | JUnit, kotlinx-coroutines-test, MockK, AndroidJUnit4 + in-memory Room |
 
 ## Architecture overview
 
 ```
 ui/                 Compose screens, navigation, typography
-presentation/       FormViewModel, UiState, choice selection rules
-domain/             Form models, FormRepository interface
+presentation/       FormViewModel, UiState
+domain/             Form models, choice selection rules, FormRepository interface
 data/
   remote/           Retrofit API, DTOs, Moshi parser
   local/            Room entities, DAO, database
@@ -39,9 +42,10 @@ di/                 Hilt modules (network, database, repository)
 
 ### Data flow
 
-1. **Refresh** — `FormApiService.getPages()` → map to entities → `FormDao.replaceAll()` inside a Room transaction.
-2. **Observe** — `FormDao` exposes `Flow`s for nodes, response sets, and options; the repository combines them into `Flow<List<FormPage>>`.
-3. **UI** — `FormViewModel` collects the flow and triggers refresh on startup; Compose reads `FormUiState`.
+1. **Refresh** — `FormApiService.getPages()` → map to entities → `FormDao.replaceAll()` inside a Room transaction (choice selections are **not** cleared).
+2. **Observe** — `FormDao` exposes `Flow`s for nodes, response sets, options, and choice selections; the repository maps them to domain models.
+3. **Answers** — toggles call `FormRepository.updateChoiceSelection()` (serialized read–modify–write).
+4. **UI** — `FormViewModel` collects flows, triggers refresh on startup, restores tab index from `SavedStateHandle`; Compose reads `FormUiState`.
 
 ### Room schema (relational)
 
@@ -50,8 +54,9 @@ di/                 Hilt modules (network, database, repository)
 | `form_nodes` | Tree: `parentId`, `sortOrder`, `type`, titles/content/image URL, `responseSetId` for choices |
 | `response_sets` | Choice metadata (`multipleSelection`) |
 | `response_options` | Options per set (`label`, optional `score`) |
+| `choice_selections` | User answers (`questionId`, `responseId` composite key) |
 
-Pages are nodes with `parentId = null`. Child order matches JSON array order via `sortOrder`.
+Pages are nodes with `parentId = null`. Child order matches JSON array order via `sortOrder`. DB v2 uses destructive migration on upgrade from v1 (local dev).
 
 ### API
 
@@ -78,30 +83,44 @@ export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"  
 
 ## Tests
 
+**Unit tests (JVM, no device):**
+
 ```bash
 ./gradlew testDebugUnitTest
 ```
 
-Coverage includes polymorphic JSON parsing, DTO/entity mappers, repository refresh behavior, ViewModel states (success, cache, errors), and choice selection rules.
+Covers JSON parsing, mappers, repository refresh mapping (mock DAO), ViewModel states, choice selection rules, and page progress helpers.
+
+**Instrumented tests (emulator or physical device):**
+
+```bash
+./gradlew connectedDebugAndroidTest
+```
+
+Uses in-memory Room to verify that a **successful refresh replaces** cached form rows, that a **failed refresh leaves** prior rows, that **choice selections** survive refresh and concurrent updates, and related repository behavior.
 
 ## Manual verification checklist
 
-- [ ] First launch loads pages, sections, and text with hierarchy typography
+- [ ] First launch loads **Main Page** and **Second Page** via **tabs** (not one long scroll of both)
+- [ ] Nested sections and hierarchy typography on Main Page
 - [ ] Image thumbnail opens full-screen detail with title; back returns to the form
-- [ ] Single-choice question allows one selection; multi-choice allows several
-- [ ] After a successful load, enable airplane mode and relaunch — cached form still visible
-- [ ] With cache present, failed refresh shows the error card at the top and **Retry**
-- [ ] Clear app storage, offline launch shows full-screen error and **Retry**
+- [ ] Single-choice and multi-choice work; **tap option label** on multi-choice; **scores** visible on Second Page single-choice options when present
+- [ ] Second Page shows **“X of Y answered”** as choices are filled; **“Last updated …”** after a successful refresh
+- [ ] Select Second Page, kill app, relaunch — **same tab** and **saved choice answers**
+- [ ] After a successful load, airplane mode + relaunch — cached form still visible
+- [ ] Failed refresh with cache — error card **above** the list (visible on Second Page without scrolling up) and **Retry**
+- [ ] Clear app storage, offline launch — full-screen error and **Retry**
+- [ ] Pull-to-refresh while online
 
 ## Screenshots (for GitHub)
 
-Suggested captures for the README or PR:
+Suggested captures:
 
-1. Main form with both pages visible (scroll)
-2. Nested sections (e.g. Subsection 1.1)
+1. **Main Page** tab with nested sections
+2. **Second Page** tab with choice questions, scores, and progress line
 3. Image detail screen
-4. Choice questions on Second Page
-5. Offline banner with cached content
+4. Offline / refresh error banner with cached content (Second Page tab)
+5. Pull-to-refresh indicator (optional)
 
 ## Package
 

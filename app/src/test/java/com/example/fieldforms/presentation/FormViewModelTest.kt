@@ -1,5 +1,6 @@
 package com.example.fieldforms.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.fieldforms.R
 import com.example.fieldforms.domain.model.FormPage
 import com.example.fieldforms.domain.repository.FormRepository
@@ -39,6 +40,9 @@ class FormViewModelTest {
         every { repository.observeChoiceSelections() } returns selectionsFlow
     }
 
+    private fun createViewModel(savedStateHandle: SavedStateHandle = SavedStateHandle()) =
+        FormViewModel(repository, savedStateHandle)
+
     @Test
     fun init_refreshSuccess_showsPagesFromObserveForm() = runTest {
         val cachedPages = listOf(FormPage(id = 1, title = "Main Page"))
@@ -46,7 +50,7 @@ class FormViewModelTest {
         every { repository.observeForm() } returns pagesFlow
         coEvery { repository.refresh() } returns RefreshResult.Success
 
-        val viewModel = FormViewModel(repository)
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertEquals(cachedPages, viewModel.uiState.value.pages)
@@ -68,7 +72,7 @@ class FormViewModelTest {
             RefreshResult.Success
         }
 
-        val viewModel = FormViewModel(repository)
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertEquals(cachedPages, viewModel.uiState.value.pages)
@@ -87,7 +91,7 @@ class FormViewModelTest {
         every { repository.observeForm() } returns pagesFlow
         coEvery { repository.refresh() } returns RefreshResult.Failure(RefreshError.Network)
 
-        val viewModel = FormViewModel(repository)
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertEquals(cachedPages, viewModel.uiState.value.pages)
@@ -104,7 +108,7 @@ class FormViewModelTest {
         every { repository.observeForm() } returns pagesFlow
         coEvery { repository.refresh() } returns RefreshResult.Failure(RefreshError.Network)
 
-        val viewModel = FormViewModel(repository)
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.pages.isEmpty())
@@ -127,7 +131,7 @@ class FormViewModelTest {
             )
         } returns Unit
 
-        val viewModel = FormViewModel(repository)
+        val viewModel = createViewModel()
         advanceUntilIdle()
 
         viewModel.onChoiceResponseToggle(
@@ -147,6 +151,24 @@ class FormViewModelTest {
     }
 
     @Test
+    fun init_restoresSelectedPageIndexFromSavedStateHandle() = runTest {
+        every { repository.observeForm() } returns pagesFlow
+        coEvery { repository.refresh() } returns RefreshResult.Success
+        pagesFlow.value = listOf(
+            FormPage(id = 1, title = "Main Page"),
+            FormPage(id = 10, title = "Second Page"),
+        )
+
+        val viewModel = createViewModel(
+            SavedStateHandle(mapOf(FormViewModel.KEY_SELECTED_PAGE_INDEX to 1)),
+        )
+        advanceUntilIdle()
+
+        assertEquals(1, viewModel.uiState.value.selectedPageIndex)
+        assertEquals("Second Page", viewModel.uiState.value.selectedPage?.title)
+    }
+
+    @Test
     fun cancelledRefresh_doesNotSetErrorWhenNewerRefreshSucceeded() = runTest {
         pagesFlow.value = listOf(FormPage(id = 1, title = "Main Page"))
         every { repository.observeForm() } returns pagesFlow
@@ -162,7 +184,7 @@ class FormViewModelTest {
             }
         }
 
-        val viewModel = FormViewModel(repository)
+        val viewModel = createViewModel()
         advanceTimeBy(1.milliseconds)
 
         viewModel.refresh()

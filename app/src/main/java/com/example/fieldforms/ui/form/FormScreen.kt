@@ -22,9 +22,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.example.fieldforms.domain.model.answeredChoiceCount
+import com.example.fieldforms.domain.model.choiceQuestionIds
+import java.text.DateFormat
+import java.util.Date
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.fieldforms.R
@@ -142,6 +147,12 @@ private fun FormContent(
             }
         }
 
+        FormPageStatusLines(
+            page = selectedPage,
+            choiceSelections = uiState.choiceSelections,
+            lastRefreshEpochMillis = uiState.lastRefreshEpochMillis,
+        )
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -156,6 +167,47 @@ private fun FormContent(
                     onChoiceResponseToggle = onChoiceResponseToggle,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun FormPageStatusLines(
+    page: FormPage,
+    choiceSelections: Map<Int, Set<Int>>,
+    lastRefreshEpochMillis: Long?,
+    modifier: Modifier = Modifier,
+) {
+    val choiceCount = page.choiceQuestionIds().size
+    if (choiceCount == 0 && lastRefreshEpochMillis == null) return
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (choiceCount > 0) {
+            val answered = page.answeredChoiceCount(choiceSelections)
+            Text(
+                text = stringResource(
+                    R.string.form_progress_answered,
+                    answered,
+                    choiceCount,
+                ),
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
+        if (lastRefreshEpochMillis != null) {
+            val formatted = remember(lastRefreshEpochMillis) {
+                DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
+                    .format(Date(lastRefreshEpochMillis))
+            }
+            Text(
+                text = stringResource(R.string.form_last_updated, formatted),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

@@ -1,6 +1,4 @@
-package com.example.fieldforms.presentation
-
-import com.example.fieldforms.domain.model.ChoiceSelections
+package com.example.fieldforms.domain.model
 
 object ChoiceSelectionLogic {
 

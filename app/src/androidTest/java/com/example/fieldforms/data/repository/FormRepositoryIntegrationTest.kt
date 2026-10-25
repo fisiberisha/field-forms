@@ -10,6 +10,7 @@ import com.example.fieldforms.data.remote.FormJsonParser
 import com.example.fieldforms.data.remote.dto.PageDto
 import com.example.fieldforms.domain.repository.RefreshError
 import com.example.fieldforms.domain.repository.RefreshResult
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -49,6 +50,25 @@ class FormRepositoryIntegrationTest {
     }
 
     @Test
+    fun successfulRefresh_replacesPreviousFormRows() = runBlocking {
+        val repository = FormRepositoryImpl(database.formDao(), api)
+
+        assertEquals(RefreshResult.Success, repository.refresh())
+        val idsAfterFirst = database.formDao().observeAllNodes().first().map { it.id }.toSet()
+        assertTrue(idsAfterFirst.contains(1))
+
+        remotePages = FormJsonParser.parsePages(readFixture("lumiform-android-test-replacement.json"))
+        val replacementModels = remotePages.toPersistModels()
+        assertEquals(RefreshResult.Success, repository.refresh())
+
+        val nodesAfterSecond = database.formDao().observeAllNodes().first()
+        val idsAfterSecond = nodesAfterSecond.map { it.id }.toSet()
+        assertFalse(idsAfterSecond.contains(1))
+        assertTrue(idsAfterSecond.contains(100))
+        assertEquals(replacementModels.nodes.size, nodesAfterSecond.size)
+    }
+
+    @Test
     fun failedRefresh_leavesCachedFormRowsInDatabase() = runBlocking {
         val repository = FormRepositoryImpl(database.formDao(), api)
         val persistModels = remotePages.toPersistModels()
@@ -58,10 +78,36 @@ class FormRepositoryIntegrationTest {
         shouldFailRefresh = true
         val result = repository.refresh()
         assertTrue(result is RefreshResult.Failure)
-        assertTrue((result as RefreshResult.Failure).error is RefreshError.Unknown)
+        assertEquals(RefreshError.Network, (result as RefreshResult.Failure).error)
 
         val nodesAfterFailure = database.formDao().observeAllNodes().first()
         assertEquals(persistModels.nodes.size, nodesAfterFailure.size)
+    }
+
+    @Test
+    fun concurrentChoiceUpdates_keepBothSelections() = runBlocking {
+        val repository = FormRepositoryImpl(database.formDao(), api)
+        repository.refresh()
+
+        val first = async {
+            repository.updateChoiceSelection(
+                questionId = 14,
+                responseId = 1021,
+                multipleSelection = true,
+            )
+        }
+        val second = async {
+            repository.updateChoiceSelection(
+                questionId = 14,
+                responseId = 1022,
+                multipleSelection = true,
+            )
+        }
+        first.await()
+        second.await()
+
+        val selections = repository.observeChoiceSelections().first()
+        assertEquals(setOf(1021, 1022), selections[14])
     }
 
     @Test

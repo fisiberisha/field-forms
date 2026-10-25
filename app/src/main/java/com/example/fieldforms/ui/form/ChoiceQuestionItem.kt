@@ -13,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.example.fieldforms.R
 import com.example.fieldforms.domain.model.ChoiceQuestion
 
 @Composable
@@ -45,15 +47,16 @@ fun ChoiceQuestionItem(
 
         question.responseSet.responses.forEach { response ->
             val isSelected = response.id in selectedResponseIds
+            val label = choiceOptionLabel(response.label, response.score)
             if (multipleSelection) {
                 MultiChoiceOptionRow(
-                    label = response.label,
+                    label = label,
                     isSelected = isSelected,
                     onToggle = { onResponseToggle(response.id) },
                 )
             } else {
                 SingleChoiceOptionRow(
-                    label = response.label,
+                    label = label,
                     isSelected = isSelected,
                     onSelect = { onResponseToggle(response.id) },
                 )
@@ -61,6 +64,14 @@ fun ChoiceQuestionItem(
         }
     }
 }
+
+@Composable
+private fun choiceOptionLabel(label: String, score: Int?): String =
+    if (score != null) {
+        stringResource(R.string.choice_option_with_score, label, score)
+    } else {
+        label
+    }
 
 @Composable
 private fun SingleChoiceOptionRow(

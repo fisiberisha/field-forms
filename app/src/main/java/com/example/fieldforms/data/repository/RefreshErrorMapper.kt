@@ -14,6 +14,6 @@ internal fun Exception.toRefreshError(): RefreshError =
         is UnknownHostException, is ConnectException, is SocketTimeoutException -> RefreshError.Network
         is HttpException -> RefreshError.Http(code())
         is JsonEncodingException, is JsonDataException -> RefreshError.Unknown(message)
-        is IOException -> RefreshError.Unknown(message)
+        is IOException -> RefreshError.Network
         else -> RefreshError.Unknown(message)
     }

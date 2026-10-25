@@ -11,4 +11,8 @@
     <string name="error_load_generic">Couldn\'t load the form. Please try again.</string>
     <string name="error_refresh_offline_cache">Couldn\'t refresh — you\'re offline. Showing saved data.</string>
     <string name="error_refresh_with_cache">Couldn\'t refresh. Showing saved data.</string>
+
+    <string name="form_progress_answered">%1$d of %2$d answered</string>
+    <string name="form_last_updated">Last updated %1$s</string>
+    <string name="choice_option_with_score">%1$s · Score %2$d</string>
 </resources>

@@ -10,6 +10,7 @@ data class FormUiState(
     val isRefreshing: Boolean = true,
     @param:StringRes val errorMessageRes: Int? = null,
     val choiceSelections: ChoiceSelections = emptyMap(),
+    val lastRefreshEpochMillis: Long? = null,
 ) {
     val selectedPage: FormPage?
         get() = pages.getOrNull(selectedPageIndex)

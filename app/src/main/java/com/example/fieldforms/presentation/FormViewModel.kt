@@ -1,5 +1,6 @@
 package com.example.fieldforms.presentation
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.fieldforms.domain.repository.FormRepository
@@ -18,9 +19,15 @@ import javax.inject.Inject
 @HiltViewModel
 class FormViewModel @Inject constructor(
     private val formRepository: FormRepository,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(FormUiState())
+    private val _uiState = MutableStateFlow(
+        FormUiState(
+            selectedPageIndex = savedStateHandle.get<Int>(KEY_SELECTED_PAGE_INDEX) ?: 0,
+            lastRefreshEpochMillis = savedStateHandle.get<Long>(KEY_LAST_REFRESH_EPOCH_MILLIS),
+        ),
+    )
     val uiState: StateFlow<FormUiState> = _uiState.asStateFlow()
 
     private val refreshGeneration = AtomicInteger(0)
@@ -52,7 +59,15 @@ class FormViewModel @Inject constructor(
                 when (val result = formRepository.refresh()) {
                     RefreshResult.Success -> {
                         if (generation != refreshGeneration.get()) return@launch
-                        _uiState.update { it.copy(isRefreshing = false, errorMessageRes = null) }
+                        val refreshedAt = System.currentTimeMillis()
+                        savedStateHandle[KEY_LAST_REFRESH_EPOCH_MILLIS] = refreshedAt
+                        _uiState.update {
+                            it.copy(
+                                isRefreshing = false,
+                                errorMessageRes = null,
+                                lastRefreshEpochMillis = refreshedAt,
+                            )
+                        }
                     }
                     is RefreshResult.Failure -> {
                         if (generation != refreshGeneration.get()) return@launch
@@ -78,6 +93,7 @@ class FormViewModel @Inject constructor(
     }
 
     fun onPageSelected(index: Int) {
+        savedStateHandle[KEY_SELECTED_PAGE_INDEX] = index
         _uiState.update { it.copy(selectedPageIndex = index) }
     }
 
@@ -93,5 +109,10 @@ class FormViewModel @Inject constructor(
                 multipleSelection = multipleSelection,
             )
         }
+    }
+
+    companion object {
+        internal const val KEY_SELECTED_PAGE_INDEX = "selectedPageIndex"
+        internal const val KEY_LAST_REFRESH_EPOCH_MILLIS = "lastRefreshEpochMillis"
     }
 }

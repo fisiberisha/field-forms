@@ -29,8 +29,8 @@ class RefreshErrorMapperTest {
     }
 
     @Test
-    fun mapsGenericIOExceptionToUnknown() {
-        assertEquals(RefreshError.Unknown("broken pipe"), IOException("broken pipe").toRefreshError())
+    fun mapsGenericIOExceptionToNetworkError() {
+        assertEquals(RefreshError.Network, IOException("broken pipe").toRefreshError())
     }
 
     @Test
