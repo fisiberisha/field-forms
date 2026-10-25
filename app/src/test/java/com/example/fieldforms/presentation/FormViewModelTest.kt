@@ -66,7 +66,10 @@ class FormViewModelTest {
         val viewModel = FormViewModel(repository)
 
         assertEquals(cachedPages, viewModel.uiState.value.pages)
-        assertEquals("offline", viewModel.uiState.value.errorMessage)
+        assertEquals(
+            FormErrorMessages.cachedDataRefreshMessage(IOException("offline")),
+            viewModel.uiState.value.errorMessage,
+        )
         assertFalse(viewModel.uiState.value.isLoading)
         assertTrue(viewModel.uiState.value.showContent)
     }
@@ -79,7 +82,10 @@ class FormViewModelTest {
         val viewModel = FormViewModel(repository)
 
         assertTrue(viewModel.uiState.value.pages.isEmpty())
-        assertEquals("offline", viewModel.uiState.value.errorMessage)
+        assertEquals(
+            FormErrorMessages.noCachedDataMessage(IOException("offline")),
+            viewModel.uiState.value.errorMessage,
+        )
         assertTrue(viewModel.uiState.value.showFullScreenError)
     }
 

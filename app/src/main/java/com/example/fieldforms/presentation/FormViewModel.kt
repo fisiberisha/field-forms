@@ -49,10 +49,15 @@ class FormViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false, errorMessage = null) }
                 }
                 is RefreshResult.Failure -> {
-                    _uiState.update {
-                        it.copy(
+                    _uiState.update { current ->
+                        val message = if (current.pages.isEmpty()) {
+                            FormErrorMessages.noCachedDataMessage(result.cause)
+                        } else {
+                            FormErrorMessages.cachedDataRefreshMessage(result.cause)
+                        }
+                        current.copy(
                             isLoading = false,
-                            errorMessage = result.cause.message ?: "Unable to refresh form",
+                            errorMessage = message,
                         )
                     }
                 }
