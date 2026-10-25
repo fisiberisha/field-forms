@@ -8,7 +8,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.fieldforms.presentation.FormViewModel
-import com.example.fieldforms.ui.form.FormScreen
+import com.example.fieldforms.ui.navigation.FieldFormsNavHost
 import com.example.fieldforms.ui.theme.FieldFormsTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             FieldFormsTheme {
-                FormScreen(
+                FieldFormsNavHost(
                     uiState = uiState,
                     onRetry = viewModel::refresh,
                 )

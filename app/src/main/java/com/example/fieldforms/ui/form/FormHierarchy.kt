@@ -19,6 +19,7 @@ import com.example.fieldforms.domain.model.TextQuestion
 @Composable
 fun FormPageContent(
     page: FormPage,
+    onImageClick: (ImageQuestion) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
@@ -28,7 +29,11 @@ fun FormPageContent(
         )
         Spacer(modifier = Modifier.height(12.dp))
         page.items.forEach { child ->
-            FormChildContent(child = child, sectionDepth = 0)
+            FormChildContent(
+                child = child,
+                sectionDepth = 0,
+                onImageClick = onImageClick,
+            )
         }
     }
 }
@@ -37,6 +42,7 @@ fun FormPageContent(
 private fun FormChildContent(
     child: FormChild,
     sectionDepth: Int,
+    onImageClick: (ImageQuestion) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (child) {
@@ -52,7 +58,11 @@ private fun FormChildContent(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 child.items.forEach { nested ->
-                    FormChildContent(child = nested, sectionDepth = sectionDepth + 1)
+                    FormChildContent(
+                        child = nested,
+                        sectionDepth = sectionDepth + 1,
+                        onImageClick = onImageClick,
+                    )
                 }
             }
         }
@@ -67,8 +77,16 @@ private fun FormChildContent(
                 ),
             )
         }
-        is ImageQuestion, is ChoiceQuestion -> {
-            // Rendered in Phases 7 and 8.
+        is ImageQuestion -> {
+            ImageQuestionItem(
+                question = child,
+                sectionDepth = sectionDepth,
+                onClick = { onImageClick(child) },
+                modifier = modifier,
+            )
+        }
+        is ChoiceQuestion -> {
+            // Rendered in Phase 8.
         }
     }
 }

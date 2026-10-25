@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.example.fieldforms.domain.model.ImageQuestion
 import com.example.fieldforms.presentation.FormUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,6 +29,7 @@ import com.example.fieldforms.presentation.FormUiState
 fun FormScreen(
     uiState: FormUiState,
     onRetry: () -> Unit,
+    onImageClick: (ImageQuestion) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -57,6 +59,7 @@ fun FormScreen(
                 FormContent(
                     uiState = uiState,
                     onRetry = onRetry,
+                    onImageClick = onImageClick,
                     contentPadding = innerPadding,
                 )
             }
@@ -68,6 +71,7 @@ fun FormScreen(
 private fun FormContent(
     uiState: FormUiState,
     onRetry: () -> Unit,
+    onImageClick: (ImageQuestion) -> Unit,
     contentPadding: PaddingValues,
 ) {
     LazyColumn(
@@ -90,7 +94,10 @@ private fun FormContent(
             items = uiState.pages,
             key = { page -> page.id },
         ) { page ->
-            FormPageContent(page = page)
+            FormPageContent(
+                page = page,
+                onImageClick = onImageClick,
+            )
         }
     }
 }
